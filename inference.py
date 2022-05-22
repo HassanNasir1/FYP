@@ -7,12 +7,11 @@ Original file is located at
     https://colab.research.google.com/drive/11AMvthbES3rNMiLSdK69M8G4123GouyU
 """
 
-import torch.nn as nn
-import torchvision.models as models
+import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-import numpy as np
 from PIL import Image
 
 
@@ -86,8 +85,6 @@ class CNN(nn.Module):
         self.conv5 = nn.Conv2d(128, 256, 5, 1)
         self.conv6 = nn.Conv2d(256, 512, 5, 1)
         self.conv7 = nn.Conv2d(512, 1024, 5, 1)
-        # self.dropout1 = nn.Dropout2d(0.25)
-        # self.dropout2 = nn.Dropout2d(0.5)
         self.fc1 = nn.Linear(208896, 556)
 
     # x represents our data
@@ -115,20 +112,16 @@ class CNN(nn.Module):
         x = self.conv7(x)
         x = F.relu(x)
         x = F.max_pool2d(x, 2)
-        # Pass data through dropout1
-        # x = self.dropout1(x)
         # Flatten x with start_dim=1
         x = torch.flatten(x, 1)
         # Pass data through fc1
         x = self.fc1(x)
         x = F.relu(x)
-        # Apply softmax to x
-        # output = F.log_softmax(x, dim=1)
         output = x
         return output
 
 
-im = Image.open(uploaded)
+im = Image.open('./dataset/Case_15-05.tif')
 imarray = np.array(im)
 
 transform = transforms.Compose(
@@ -141,22 +134,18 @@ input = transform(imarray)
 input = torch.unsqueeze(input, 0)
 
 
-PATH = "./cnn.pth.tar"  # latest cnn checkpoint "/content/drive/MyDrive/rnn_checkpoints/my_checkpoint_20.pth.tar"
+PATH = "./cnn.pth.tar"
 cnn = CNN()
-# Save
+
 torch.save(cnn.state_dict(), PATH)
 
-# Load
 model = CNN()
 model.load_state_dict(torch.load(PATH))
-print(model.state_dict())
 model.eval()
 out_cnn = model(input)
 
-# Specify a path
-import torch
 
-PATH = "/contents/drive/MyDrive/rnn_checkpoint.pth.tar"  # latest rnn checkpoint "/content/drive/MyDrive/rnn_checkpoints/my_checkpoint_20.pth.tar"
+PATH = "./rnn.pth.tar"
 rnn = RNN()
 # Save
 torch.save(rnn.state_dict(), PATH)
@@ -164,7 +153,7 @@ torch.save(rnn.state_dict(), PATH)
 # Load
 model = RNN()
 model.load_state_dict(torch.load(PATH))
-print(model.state_dict())
+#  print(model.state_dict())
 model.eval()
 out_rnn = model(input)
 
@@ -176,7 +165,6 @@ for out1 in output_cnn:
         if out2 == 0:
             count_cnn += 1
 print(count_cnn)
-print(output_cnn)
 print(556 - count_cnn)
 
 count_rnn = 0
@@ -187,5 +175,4 @@ for out1 in output_rnn:
         if out2 == 0:
             count_rnn += 1
 print(count_rnn)
-print(output_rnn)
 print(556 - count_rnn)
